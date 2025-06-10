@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Regresi Linear Sederhana</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background-color: #f4f4f4;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+
+    input[type="number"] {
+      width: 80px;
+      padding: 4px;
+    }
+
+    .btn {
+      padding: 10px 15px;
+      background-color: #007BFF;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+
+    #result {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+    }
+
+    .flex {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Kalkulator Regresi Linear</h2>
+
+  <div id="dataInputs">
+    <table id="inputTable">
+      <thead>
+        <tr>
+          <th>X</th>
+          <th>Y</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr>
+          <td><input type="number" step="any" class="xVal"></td>
+          <td><input type="number" step="any" class="yVal"></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn" onclick="addRow()">+ Tambah Baris</button>
+  </div>
+
+  <button class="btn" onclick="calculateRegression()">Hitung Regresi</button>
+
+  <div id="result"></div>
+
+  <div id="prediction" style="display:none;">
+    <h3>Prediksi Y dari X</h3>
+    <input type="number" id="predictX" placeholder="Masukkan nilai X" step="any">
+    <button class="btn" onclick="predictY()">Hitung Y</button>
+    <p id="predictedY"></p>
+  </div>
+
+  <script>
+    let a = 0, b = 0;
+
+    function addRow() {
+      const tableBody = document.getElementById('tableBody');
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = `
+        <td><input type="number" step="any" class="xVal"></td>
+        <td><input type="number" step="any" class="yVal"></td>
+      `;
+      tableBody.appendChild(newRow);
+    }
+
+    function calculateRegression() {
+      const xInputs = document.querySelectorAll('.xVal');
+      const yInputs = document.querySelectorAll('.yVal');
+
+      let x = [], y = [];
+
+      for (let i = 0; i < xInputs.length; i++) {
+        const xi = parseFloat(xInputs[i].value);
+        const yi = parseFloat(yInputs[i].value);
+        if (!isNaN(xi) && !isNaN(yi)) {
+          x.push(xi);
+          y.push(yi);
+        }
+      }
+
+      if (x.length < 2) {
+        alert('Masukkan minimal dua data!');
+        return;
+      }
+
+      const n = x.length;
+      const sumX = x.reduce((a, b) => a + b, 0);
+      const sumY = y.reduce((a, b) => a + b, 0);
+      const sumXY = x.reduce((acc, val, i) => acc + val * y[i], 0);
+      const sumX2 = x.reduce((acc, val) => acc + val * val, 0);
+
+      b = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      a = (sumY - b * sumX) / n;
+
+      document.getElementById('result').innerHTML = `
+        <h3>Hasil Regresi:</h3>
+        <p>Persamaan: <strong>Y = ${a.toFixed(4)} + ${b.toFixed(4)}X</strong></p>
+      `;
+
+      document.getElementById('prediction').style.display = 'block';
+    }
+
+function predictY() {
+  const x = parseFloat(document.getElementById('predictX').value);
+  if (isNaN(x)) {
+    alert('Masukkan nilai X untuk prediksi!');
+    return;
+  }
+
+  const y = a + b * x;
+  document.getElementById('predictedY').textContent =
+    `Nilai Y yang diprediksi pada posisi X (${x.toFixed(4)}) adalah: ${y.toFixed(4)}`;
+}
+
+  </script>
+</body>
+</html>

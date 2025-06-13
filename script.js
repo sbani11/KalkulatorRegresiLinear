@@ -102,7 +102,7 @@ function predictY() {
     }
   }
 
-  drawChart(xData, yData, predictedX); // ← argumen ke-3 adalah predictedX
+  drawChart(xData, yData, x); // ← argumen ke-3 adalah predictedX
 }
 
 

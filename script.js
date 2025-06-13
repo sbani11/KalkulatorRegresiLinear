@@ -85,36 +85,72 @@ function predictY() {
     return;
   }
   const y = a + b * x;
-  predictedX = x;
   document.getElementById('predictedY').textContent =
     `Nilai Y yang diprediksi pada posisi X (${x.toFixed(4)}) adalah: ${y.toFixed(4)}`;
 
-  // Update chart untuk tampilkan prediksi
+  // Redraw chart dengan titik prediksi
   const xInputs = document.querySelectorAll('.xVal');
   const yInputs = document.querySelectorAll('.yVal');
-  const xData = Array.from(xInputs).map(input => parseFloat(input.value));
-  const yData = Array.from(yInputs).map(input => parseFloat(input.value));
-  drawChart(xData, yData);
+  const xData = [], yData = [];
+
+  for (let i = 0; i < xInputs.length; i++) {
+    const xi = parseFloat(xInputs[i].value);
+    const yi = parseFloat(yInputs[i].value);
+    if (!isNaN(xi) && !isNaN(yi)) {
+      xData.push(xi);
+      yData.push(yi);
+    }
+  }
+
+  drawChart(xData, yData, x); // ← argumen ke-3 adalah predictedX
 }
 
-function drawChart(xData, yData) {
+
+function drawChart(xData, yData, predictedX = null) {
   const scatterData = xData.map((val, i) => ({ x: val, y: yData[i] }));
-  const minX = Math.min(...xData);
-  const maxX = Math.max(...xData);
+  
+  const datasets = [
+    {
+      label: 'Data Asli',
+      data: scatterData,
+      backgroundColor: 'blue',
+      pointRadius: 5
+    }
+  ];
+
+  // Tentukan min dan max dari semua X termasuk titik prediksi (jika ada)
+  const allX = [...xData];
+  if (predictedX !== null && !isNaN(predictedX)) {
+    allX.push(predictedX);
+  }
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+
+  // Garis regresi: dari minX sampai maxX
   const regressionLine = [
     { x: minX, y: a + b * minX },
     { x: maxX, y: a + b * maxX }
   ];
 
-  const predictionPoint = (typeof predictedX === 'number' && !isNaN(predictedX))
-    ? [{
-        label: 'Prediksi Y',
-        data: [{ x: predictedX, y: a + b * predictedX }],
-        backgroundColor: 'green',
-        pointRadius: 6,
-        type: 'scatter'
-      }]
-    : [];
+  datasets.push({
+    label: 'Garis Regresi',
+    data: regressionLine,
+    type: 'line',
+    borderColor: 'red',
+    borderWidth: 2,
+    pointRadius: 0,
+    fill: false
+  });
+
+  // Titik prediksi jika tersedia
+  if (predictedX !== null && !isNaN(predictedX)) {
+    datasets.push({
+      label: 'Prediksi Y',
+      data: [{ x: predictedX, y: a + b * predictedX }],
+      backgroundColor: 'green',
+      pointRadius: 7
+    });
+  }
 
   const ctx = document.getElementById('myChart').getContext('2d');
   if (chart) chart.destroy();
@@ -122,23 +158,7 @@ function drawChart(xData, yData) {
   chart = new Chart(ctx, {
     type: 'scatter',
     data: {
-      datasets: [
-        {
-          label: 'Data Asli',
-          data: scatterData,
-          backgroundColor: 'blue'
-        },
-        {
-          label: 'Garis Regresi',
-          data: regressionLine,
-          type: 'line',
-          borderColor: 'red',
-          borderWidth: 2,
-          pointRadius: 0,
-          fill: false
-        },
-        ...predictionPoint
-      ]
+      datasets: datasets
     },
     options: {
       responsive: true,
@@ -171,6 +191,7 @@ function drawChart(xData, yData) {
     }
   });
 }
+
 
 function downloadChart() {
   const link = document.createElement('a');
